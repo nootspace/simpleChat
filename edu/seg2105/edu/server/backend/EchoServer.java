@@ -4,6 +4,7 @@ package edu.seg2105.edu.server.backend;
 // license found at www.lloseng.com 
 
 
+import edu.seg2105.edu.server.ui.ServerConsole;
 import ocsf.server.*;
 
 /**
@@ -39,19 +40,48 @@ public class EchoServer extends AbstractServer
   
   //Instance methods ************************************************
   
+  
+  
+  
+  
+  
   /**
    * This method handles any messages received from the client.
    *
    * @param msg The message received from the client.
    * @param client The connection from which the message originated.
    */
-  public void handleMessageFromClient
-    (Object msg, ConnectionToClient client)
-  {
-    System.out.println("Message received: " + msg + " from " + client);
-    this.sendToAllClients(msg);
+  public void handleMessageFromClient (Object msg, ConnectionToClient client){
+	  String[] arr = msg.toString().split(" "); // split the message
+	 switch(arr[0]) { // arr[0] will be the command #___
+	 
+	  case "#logoff": // for diconnecting clients
+		  System.out.println("Client requesting logoff from " + client + "...");
+		  try{client.close(); // try to close the connection
+		  } catch(Exception e) {
+			  System.out.println("Error closing client: " + e.getMessage());
+		  } break;
+	  case "#login": // to save client's ID
+		  client.setInfo("loginID", arr[1]); // don't need a try/catch since the message for #login was already preformatted/checked
+		  System.out.println(arr[1] + " has logged on.");
+		  this.sendToAllClients("[" + client.getInfo("loginID") + "] > " + msg);
+		 break;
+      default:
+    	  System.out.println("Message received: \"" + msg + "\" from " + client.getInfo("loginID"));
+    	    
+	    	this.sendToAllClients("[" + client.getInfo("loginID") + "] > " + msg);
+    	    
+    	    break;
+	  }
   }
     
+  
+  
+  public void handleServerInput(String message) {
+	System.out.println("> " + message); // to display in server console
+	this.sendToAllClients("SERVER MSG> " + message); // to send to clients
+  }
+  
   /**
    * This method overrides the one in the superclass.  Called
    * when the server starts listening for connections.
@@ -70,6 +100,19 @@ public class EchoServer extends AbstractServer
   {
     System.out.println
       ("Server has stopped listening for connections.");
+  }
+  
+  // HOOK to display a message upon connection to the server
+  @Override
+  protected void clientConnected(ConnectionToClient client) {
+	  System.out.println("A new client has connected to the server.");
+  }
+  
+  
+  // HOOK to display a message upon disconnecting to the server
+  @Override
+  synchronized protected void clientDisconnected(ConnectionToClient client) {
+	  System.out.println(client.getInfo("loginID") + " has disconnected.");
   }
   
   
@@ -105,6 +148,9 @@ public class EchoServer extends AbstractServer
     {
       System.out.println("ERROR - Could not listen for clients!");
     }
+    
+    ServerConsole console = new ServerConsole(sv);
+    console.accept(); // in order to accept messages from server console
   }
 }
 //End of EchoServer class
