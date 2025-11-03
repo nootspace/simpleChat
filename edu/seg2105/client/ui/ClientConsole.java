@@ -108,7 +108,11 @@ public class ClientConsole implements ChatIF
         			
         	case "#sethost":
         		if (!connected) { // ONLY if the client is not connected
-        			client.setHost(msgArray[1]); // param should be element 2
+        			try {client.setHost(msgArray[1]);} // param should be element 2
+        			catch (Exception e){
+        				System.out.println("Error: The host name should be one string with no whitespace.");
+        			}
+        			
         		}
         		else {
         			System.out.println("Error: Please log off before modifying the host.");
@@ -149,9 +153,9 @@ public class ClientConsole implements ChatIF
         	}
       }
     } 
-    catch (Exception ex) 
+    catch (Exception ex) // to catch any extra exceptions
     {
-     
+     System.out.println("Error: Message handling issue."); 
     }
   }
 
